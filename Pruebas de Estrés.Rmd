@@ -1,0 +1,390 @@
+---
+title: "Pruebas de Estrés"
+author: "Salamanca Tostado Victor Alfredo"
+date: "2025-03-21"
+output: html_document
+---
+Estimación de la Probabildiad de Incumplimiento del portafolio de Tarjetas de Crédito
+
+```{r}
+library(tidyverse)
+library(caret) 
+library(httr)
+library(jsonlite)
+library(dplyr)
+library(glmnet)
+library(car)
+library(readxl)
+library(ggplot2)
+```
+
+```{r}
+data <- read_excel("C:\\Users\\valfr\\OneDrive\\Documents\\ACTUARÍA\\ADMON. INT. DE RIESGOS\\PROYECTO 2\\Proyecto 2.xlsx", sheet = "Datos")
+head(data)
+
+```
+
+
+```{r}
+# Realiza gráficos exploratorios para cada banco
+ggplot(data, aes(x = Fecha, y = BBVA)) +
+  geom_line() +
+  ggtitle("Probabilidad de Incumplimiento")
+```
+```{r}
+ggplot(data, aes(x = Fecha, y = Banamex)) +
+  geom_line() +
+  ggtitle("Probabilidad de Incumplimiento")
+```
+```{r}
+ggplot(data, aes(x = Fecha, y = Banorte)) +
+  geom_line() +
+  ggtitle("Probabilidad de Incumplimiento")
+```
+
+```{r}
+ggplot(data, aes(x = Fecha, y = Santander)) +
+  geom_line() +
+  ggtitle("Probabilidad de Incumplimiento")
+```
+
+```{r}
+ggplot(data, aes(x = Fecha, y = TBM)) +
+  geom_line() +
+  ggtitle("Probabilidad de Incumplimiento")
+```
+
+# Variables Inegi
+
+```{r}
+inegi <- read_excel("C:\\Users\\valfr\\OneDrive\\Documents\\ACTUARÍA\\ADMON. INT. DE RIESGOS\\PROYECTO 2\\datos_series_inegi1.xlsx")
+head(inegi)
+
+```
+
+# Variables Banxico
+
+
+```{r}
+banx <- read_excel("C:\\Users\\valfr\\OneDrive\\Documents\\ACTUARÍA\\ADMON. INT. DE RIESGOS\\PROYECTO 2\\datos banxico.xlsx")
+head(banx)
+
+```
+```{r}
+#Le asignamos el mismo formato de fecha a todos los archivos
+data$Fecha <- as.Date(paste0(substr(data$Fecha, 1, 4), "-", substr(data$Fecha, 5, 6), "-01"))
+banx$Fecha <- as.Date(paste0(substr(banx$Fecha, 1, 4), "-", substr(banx$Fecha, 5, 6), "-01"))
+inegi$Fecha <- as.Date(paste0(substr(inegi$Fecha, 1, 4), "-", substr(inegi$Fecha, 5, 6), "-01"))
+
+```
+
+```{r}
+#Comprobacion de formato
+head(data$Fecha)
+head(banx$Fecha)
+head(inegi$Fecha)
+
+```
+
+```{r}
+merged_df <- Reduce(function(x, y) merge(x, y, by = "Fecha", all.x = TRUE), list(data, inegi, banx))
+View(merged_df)
+```
+
+
+Valores faltantes:
+
+```{r}
+colSums(is.na(merged_df))
+```
+Usamos la media de cada columna para rellenar los valores faltantes.
+
+```{r}
+# Rellenar valores faltantes con la media de la columna
+for (col in colnames(merged_df)) {
+  if (any(is.na(merged_df[[col]]))) {
+    merged_df[[col]][is.na(merged_df[[col]])] <- mean(merged_df[[col]], na.rm = TRUE)
+  }
+}
+```
+
+
+# Modelos de Regresión Logística
+```{r}
+# Modelo Regresión logística BBVA
+modelo1<- glm( BBVA ~ `Variable 1` + `Variable 2`+ `Variable 3`+ `Variable 4`+ `Variable 5`+ `Variable 6`+ `Variable 7`+ `Variable 8`+ `Variable 9`+ IPC + `Subyacente...3`+`No_Subyacente...4`+ ITCR + TDRC + TIIE28 + Depositos_Ahorro + CAT + INPC + `Subyacente...11` + `No_Subyacente...12` + IMTG + IMTS + IMRS + IMRTC + Salario_Contractual + Salario_Minimo + Prom_Remesas_Familiares, 
+              data = merged_df)
+
+# Ver los resultados del modelo
+summary(modelo1)
+```
+
+```{r}
+# Modelo Regresión logística TBM
+modelo2<- glm( TBM ~ `Variable 1` + `Variable 2`+ `Variable 3`+ `Variable 4`+ `Variable 5`+ `Variable 6`+ `Variable 7`+ `Variable 8`+ `Variable 9`+ IPC + `Subyacente...3`+`No_Subyacente...4`+ ITCR + TDRC + TIIE28 + Depositos_Ahorro + CAT + INPC + `Subyacente...11` + `No_Subyacente...12` + IMTG + IMTS + IMRS + IMRTC + Salario_Contractual + Salario_Minimo + Prom_Remesas_Familiares, 
+              data = merged_df)
+
+# Ver los resultados del modelo
+summary(modelo2)
+```
+
+```{r}
+# Modelo Regresión logística Banamex
+modelo3<- glm( Banamex ~ `Variable 1` + `Variable 2`+ `Variable 3`+ `Variable 4`+ `Variable 5`+ `Variable 6`+ `Variable 7`+ `Variable 8`+ `Variable 9`+ IPC + `Subyacente...3`+`No_Subyacente...4`+ ITCR + TDRC + TIIE28 + Depositos_Ahorro + CAT + INPC + `Subyacente...11` + `No_Subyacente...12` + IMTG + IMTS + IMRS + IMRTC + Salario_Contractual + Salario_Minimo + Prom_Remesas_Familiares, 
+              data = merged_df)
+
+# Ver los resultados del modelo
+summary(modelo3)
+```
+
+```{r}
+# Modelo Regresión logística Santander
+modelo4<- glm( Santander ~ `Variable 1` + `Variable 2`+ `Variable 3`+ `Variable 4`+ `Variable 5`+ `Variable 6`+ `Variable 7`+ `Variable 8`+ `Variable 9`+ IPC + `Subyacente...3`+`No_Subyacente...4`+ ITCR + TDRC + TIIE28 + Depositos_Ahorro + CAT + INPC + `Subyacente...11` + `No_Subyacente...12` + IMTG + IMTS + IMRS + IMRTC + Salario_Contractual + Salario_Minimo + Prom_Remesas_Familiares, 
+              data = merged_df)
+
+# Ver los resultados del modelo
+summary(modelo4)
+```
+
+```{r}
+# Modelo Regresión logística Banorte
+modelo5<- glm( Banorte ~ `Variable 1` + `Variable 2`+ `Variable 3`+ `Variable 4`+ `Variable 5`+ `Variable 6`+ `Variable 7`+ `Variable 8`+ `Variable 9`+ IPC + `Subyacente...3`+`No_Subyacente...4`+ ITCR + TDRC + TIIE28 + Depositos_Ahorro + CAT + INPC + `Subyacente...11` + `No_Subyacente...12` + IMTG + IMTS + IMRS + IMRTC + Salario_Contractual + Salario_Minimo + Prom_Remesas_Familiares, 
+              data = merged_df)
+
+# Ver los resultados del modelo
+summary(modelo5)
+```
+
+# Modelos de Regresión Múltiple con penalización de Ridge
+
+```{r}
+# Modelo BBVA com penalizacion de Ridge
+
+# Preparar los datos para glmnet
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$BBVA
+
+# Regresión con penalización Ridge
+modelR1 <- glmnet(x, y, family = "gaussian", alpha = 0)
+
+# Ver los coeficientes del modelo Ridge
+coef(modelR1)
+plot(modelR1)
+
+```
+
+```{r}
+# Modelo TBM com penalizacion de Ridge
+
+# Preparar los datos para glmnet
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$TBM
+
+#Regresión con penalización Ridge
+modelR2 <- glmnet(x, y, family = "gaussian", alpha = 0)
+
+# Ver los coeficientes del modelo Ridge
+coef(modelR2)
+plot(modelR2)
+
+```
+
+```{r}
+# Modelo Banamex com penalizacion de Ridge
+
+# Preparar los datos para glmnet
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$Banamex
+
+#Regresión con penalización Ridge
+modelR3 <- glmnet(x, y, family = "gaussian", alpha = 0)
+
+# Ver los coeficientes del modelo Ridge
+coef(modelR3)
+plot(modelR3)
+
+```
+
+
+```{r}
+# Modelo Santander com penalizacion de Ridge
+
+# Preparar los datos para glmnet
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$Santander
+
+# Regresión con penalización Ridge
+modelR4 <- glmnet(x, y, family = "gaussian", alpha = 0)
+
+# Ver los coeficientes del modelo Ridge
+coef(modelR4)
+plot(modelR4)
+
+```
+
+
+```{r}
+# Modelo Banorte com penalizacion de Ridge
+
+# Preparar los datos para glmnet
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$Banorte
+
+#Regresión con penalización Ridge
+modelR5 <- glmnet(x, y, family = "gaussian", alpha = 0)
+
+# Ver los coeficientes del modelo Ridge
+coef(modelR5)
+plot(modelR5)
+
+```
+
+
+# Modelos de Regresión Múltiple con penalización de Lasso
+
+```{r}
+# Modelo Regresión con penalización Lasso BBVA
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$BBVA
+
+
+
+modelL1 <- glmnet(x, y, family = "gaussian", alpha = 1)
+
+# Ver los coeficientes del modelo Lasso
+coef(modelL1)
+plot(modelL1)
+
+
+```
+
+```{r}
+# Modelo Regresión con penalización Lasso TBM
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$TBM
+
+modelL2 <- glmnet(x, y, family = "gaussian", alpha = 1)
+
+# Ver los coeficientes del modelo Lasso
+coef(modelL2)
+plot(modelL2)
+
+
+```
+
+```{r}
+# Modelo Regresión con penalización Lasso Banamex
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$Banamex
+
+modelL3 <- glmnet(x, y, family = "gaussian", alpha = 1)
+
+# Ver los coeficientes del modelo Lasso
+coef(modelL3)
+plot(modelL3)
+```
+
+
+```{r}
+# Modelo Regresión con penalización Lasso Santander
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$Santander
+
+
+
+modelL4 <- glmnet(x, y, family = "gaussian", alpha = 1)
+
+# Ver los coeficientes del modelo Lasso
+coef(modelL4)
+plot(modelL4)
+
+
+```
+
+```{r}
+# Modelo Regresión con penalización Lasso Banorte
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$Banorte
+
+modelL5 <- glmnet(x, y, family = "gaussian", alpha = 1)
+
+# Ver los coeficientes del modelo Lasso
+coef(modelL5)
+plot(modelL5)
+```
+
+
+# Modelo de Regresión Múltiple con Penalización Elastic Net
+
+```{r}
+# Modelo de Regresión con penalización Elastic Net BBVA
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$BBVA
+
+modelEN1 <- glmnet(x, y, family = "gaussian", alpha = 0.5)
+
+# Ver los coeficientes del modelo Elastic Net
+coef(modelEN1)
+plot(modelEN1)
+
+```
+
+```{r}
+# Modelo de Regresión con penalización Elastic Net TBM
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$TBM
+
+modelEN2 <- glmnet(x, y, family = "gaussian", alpha = 0.5)
+
+# Ver los coeficientes del modelo Elastic Net
+coef(modelEN2)
+plot(modelEN2)
+
+```
+
+
+```{r}
+# Modelo de Regresión con penalización Elastic Net Banamex
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$Banamex
+
+modelEN3 <- glmnet(x, y, family = "gaussian", alpha = 0.5)
+
+# Ver los coeficientes del modelo Elastic Net
+coef(modelEN3)
+plot(modelEN3)
+
+```
+
+
+```{r}
+# Modelo de Regresión con penalización Elastic Net Santander
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$Santander
+
+modelEN4 <- glmnet(x, y, family = "gaussian", alpha = 0.5)
+
+# Ver los coeficientes del modelo Elastic Net
+coef(modelEN4)
+plot(modelEN4)
+
+```
+
+
+```{r}
+# Modelo de Regresión con penalización Elastic Net Banorte
+x <- as.matrix(merged_df[, c("Variable 1", "Variable 2", "Variable 3", "Variable 4", "Variable 5", "Variable 6", "Variable 7", "Variable 8", "Variable 9", "IPC" ,"Subyacente...3","No_Subyacente...4", "ITCR",  "TDRC" , "TIIE28" , "Depositos_Ahorro", "CAT" , "INPC" , "Subyacente...11" , "No_Subyacente...12" , "IMTG", "IMTS", "IMRS" , "IMRTC", "Salario_Contractual", "Salario_Minimo" , "Prom_Remesas_Familiares")])
+y <- merged_df$Banorte
+
+modelEN1 <- glmnet(x, y, family = "gaussian", alpha = 0.5)
+
+# Ver los coeficientes del modelo Elastic Net
+coef(modelEN1)
+plot(modelEN1)
+
+```
+
+
+
+
+
