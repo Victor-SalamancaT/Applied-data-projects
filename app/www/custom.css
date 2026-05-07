@@ -1,0 +1,39 @@
+/* ==========================================================
+   custom.css - Estilos personalizados para el dashboard
+   ========================================================== */
+
+/* Fondo general y color de texto */
+body {
+  background-color: #ffffff;
+  color: #0b2545;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Bordes de los box */
+.box {
+  border: 1px solid #0b2545 !important;
+  border-radius: 12px !important;
+  box-shadow: 0px 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Color institucional azul marino para botones y elementos primarios */
+.bg-primary,
+.btn-primary {
+  background-color: #0b2545 !important;
+  border-color: #0b2545 !important;
+}
+
+/* Títulos y encabezados */
+h2, h3, h4 {
+  color: #0b2545 !important;
+}
+
+/* Color del texto de las tarjetas y cajas */
+.value-box {
+  color: #0b2545 !important;
+}
+
+/* Enlaces y textos resaltados */
+a, a:hover {
+  color: #0b2545 !important;
+}
